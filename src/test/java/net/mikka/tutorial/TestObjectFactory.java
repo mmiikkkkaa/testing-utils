@@ -3,12 +3,16 @@ package net.mikka.tutorial;
 import net.mikka.testing.testobjectvalidation.CompletelyFilledTestObject;
 import net.mikka.testing.testobjectvalidation.MinimalFilledTestObject;
 import net.mikka.testing.testobjectvalidation.TestObjectScanner;
+import net.mikka.testing.testobjectvalidation.ValidationError;
 import net.mikka.tutorial.domain.Person;
 import net.mikka.testing.testobjectvalidation.TestObjectProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @TestObjectProvider
 public class TestObjectFactory {
@@ -17,11 +21,11 @@ public class TestObjectFactory {
         // static
     }
 
-    // ToDo: automatic generated method, if class is annotated with TestObjectProvider
+    // ToDo: auto-generated method, if class is annotated with TestObjectProvider
     @Test
     void shouldHaveValidTestObjects() {
       // given
-        final List<String> validationErrors = TestObjectScanner.getTestObjectValidationErrors();
+        final List<ValidationError> validationErrors = TestObjectScanner.validateTestObjects();
         Assertions.assertEquals(0, validationErrors.size());
     }
 
@@ -30,7 +34,6 @@ public class TestObjectFactory {
         return Person.builder()
                 .firstName("John")
                 .lastName("Doe")
-                .age(99)
                 .build();
     }
 
@@ -38,9 +41,12 @@ public class TestObjectFactory {
     public static Person personMax() {
         return Person.builder()
                 .firstName("John")
+                .middleName(Optional.of("Wayne"))
                 .lastName("Doe")
                 .age(28)
-                .hobbies(List.of("Fooling"))
+                .hobbies(List.of("Testing"))
+                .favoriteMovies(Set.of("Sharknado", "Sharknado 2"))
+                .achievementsByYear(Map.of(2025, "Developing Testing-Utils"))
                 .build();
     }
 }
