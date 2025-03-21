@@ -1,4 +1,4 @@
-package net.mikka.tutorial.domain;
+package net.mikka;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

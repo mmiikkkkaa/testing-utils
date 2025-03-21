@@ -1,13 +1,8 @@
-package net.mikka.tutorial;
+package net.mikka;
 
-import net.mikka.testing.testobjectvalidation.CompletelyFilledTestObject;
-import net.mikka.testing.testobjectvalidation.MinimalFilledTestObject;
-import net.mikka.testing.testobjectvalidation.TestObjectScanner;
-import net.mikka.testing.testobjectvalidation.ValidationError;
-import net.mikka.tutorial.domain.Person;
-import net.mikka.testing.testobjectvalidation.TestObjectProvider;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import net.mikka.testing.annotations.CompletelyFilledTestObject;
+import net.mikka.testing.annotations.MinimalFilledTestObject;
+import net.mikka.testing.annotations.TestObjectProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -21,19 +16,12 @@ public class TestObjectFactory {
         // static
     }
 
-    // ToDo: auto-generated method, if class is annotated with TestObjectProvider
-    @Test
-    void shouldHaveValidTestObjects() {
-      // given
-        final List<ValidationError> validationErrors = TestObjectScanner.validateTestObjects();
-        Assertions.assertEquals(0, validationErrors.size());
-    }
-
     @MinimalFilledTestObject
     public static Person personMin() {
         return Person.builder()
                 .firstName("John")
                 .lastName("Doe")
+//                .hobbies(List.of("software testing")) // should cause error
                 .build();
     }
 

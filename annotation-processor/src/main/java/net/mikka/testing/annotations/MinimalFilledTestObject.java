@@ -1,4 +1,4 @@
-package net.mikka.testing.testobjectvalidation;
+package net.mikka.testing.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

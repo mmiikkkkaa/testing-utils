@@ -1,4 +1,4 @@
-package net.mikka.testing.testobjectvalidation;
+package net.mikka.testing;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

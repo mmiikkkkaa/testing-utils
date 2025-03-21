@@ -1,8 +1,10 @@
-package net.mikka.testing.testobjectvalidation;
+package net.mikka.testing;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.SneakyThrows;
-import lombok.extern.java.Log;
+import net.mikka.testing.annotations.CompletelyFilledTestObject;
+import net.mikka.testing.annotations.MinimalFilledTestObject;
+import net.mikka.testing.annotations.TestObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -25,7 +27,6 @@ import java.util.function.Predicate;
 
 
 @SuppressWarnings({"java:S3011", "java:S106"})
-@Log
 public class TestObjectScanner {
     private TestObjectScanner() {
         // static class
@@ -62,6 +63,17 @@ public class TestObjectScanner {
         return errors;
     }
 
+    @SneakyThrows
+    public static List<ValidationError> validateTestObjects(Class<?> classToTest) {
+
+        List<ValidationError> errors = new ArrayList<>();
+
+        errors.addAll(validateTestObject(classToTest, MinimalFilledTestObject.class, TestObjectScanner::validateMinimalFilledTestObject));
+        errors.addAll(validateTestObject(classToTest, CompletelyFilledTestObject.class, TestObjectScanner::validateCompletelyFilledTestObject));
+
+        return errors;
+    }
+
     private static List<ValidationError> validateTestObject(
             Class<?> clazz,
             Class<? extends Annotation> annotation,
@@ -92,7 +104,6 @@ public class TestObjectScanner {
     @SneakyThrows
     private static List<ValidationError> validateMinimalFilledTestObject(Object object) {
         List<ValidationError> errors = new ArrayList<>();
-        log.info("Validate test object " + object);
         final Class<?> testObjectClass = object.getClass();
 
 
@@ -114,7 +125,6 @@ public class TestObjectScanner {
                         ValidationErrorType.FIELD_IS_ILLEGALLY_NULL,
                         object
                 );
-                log.severe("  ValidationError: " + validationError);
                 errors.add(validationError);
                 continue; // if invalid null, then no other things to check
             }
@@ -126,7 +136,6 @@ public class TestObjectScanner {
                         object,
                         MinimalFilledTestObject.class
                 );
-                log.severe("  ValidationError: " + validationError);
                 errors.add(validationError);
             }
         }
@@ -136,7 +145,6 @@ public class TestObjectScanner {
     @SneakyThrows
     private static List<ValidationError> validateCompletelyFilledTestObject(Object object) {
         List<ValidationError> errors = new ArrayList<>();
-        log.info("Validate test object " + object);
         final Class<?> testObjectClass = object.getClass();
 
         // check fields
@@ -158,7 +166,6 @@ public class TestObjectScanner {
                         ValidationErrorType.FIELD_IS_ILLEGALLY_NULL,
                         object
                 );
-                log.severe("  ValidationError: " + validationError);
                 errors.add(validationError);
                 continue; // if invalid null, then no other things to check
             }
@@ -171,7 +178,6 @@ public class TestObjectScanner {
                         object,
                         CompletelyFilledTestObject.class
                 );
-                log.severe("  ValidationError: " + validationError);
                 errors.add(validationError);
             }
         }
