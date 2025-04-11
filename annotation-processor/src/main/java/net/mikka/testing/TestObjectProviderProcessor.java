@@ -48,8 +48,8 @@ public class TestObjectProviderProcessor extends AbstractProcessor {
             out.println("import javax.annotation.processing.Generated;");
             out.println("import org.junit.jupiter.api.Assertions;");
             out.println("import org.junit.jupiter.api.Test;");
-            out.println("import net.mikka.testing.TestObjectScanner;");
-            out.println("import net.mikka.testing.ValidationError;");
+            out.println("import " + TestObjectScanner.class.getName() + ";");
+            out.println("import " + ValidationError.class.getName() + ";");
             out.println("import java.util.stream.Collectors;;");
             out.println("import java.util.List;");
             out.println();

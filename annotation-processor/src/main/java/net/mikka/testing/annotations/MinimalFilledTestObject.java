@@ -8,4 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface MinimalFilledTestObject {
+    NullMarkerHandling nullMarkerHandling() default NullMarkerHandling.MARK_NON_NULLABLE_EXPLICITLY;
 }
