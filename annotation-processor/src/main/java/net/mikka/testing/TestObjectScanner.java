@@ -55,104 +55,118 @@ public class TestObjectScanner {
     }
 
     private static List<ValidationError> validateTestObject(
-            Class<?> clazz, Class<? extends Annotation> annotation, TriFunction<Object, Annotation, String, List<ValidationError>> inspectionMethod) throws IllegalAccessException, InvocationTargetException {
+            Class<?> clazz,
+            Class<? extends Annotation> annotation,
+            TriFunction<Object, Annotation, String, List<ValidationError>> inspectionMethod
+    ) throws IllegalAccessException, InvocationTargetException {
 
         List<ValidationError> errors = new ArrayList<>();
 
-        List<Method> minimalFilledTestObjectMethods = Arrays.stream(clazz.getDeclaredMethods()).filter(method -> method.getAnnotation(annotation) != null).toList();
+        List<Method> minimalFilledTestObjectMethods = Arrays.stream(clazz.getDeclaredMethods())
+                .filter(method -> method.getAnnotation(annotation) != null)
+                .toList();
 
-        // Verify the return an object
-        minimalFilledTestObjectMethods = minimalFilledTestObjectMethods.stream().filter(HAS_RETURN_TYPE).filter(HAS_NO_PARAMETERS).filter(IS_STATIC_METHOD).toList();
+        minimalFilledTestObjectMethods = minimalFilledTestObjectMethods.stream()
+                .filter(HAS_RETURN_TYPE)
+                .filter(HAS_NO_PARAMETERS)
+                .filter(IS_STATIC_METHOD)
+                .toList();
 
         for (Method method : minimalFilledTestObjectMethods) {
-//            System.out.println("testing " + method.getName());
-            final Annotation methodAnnotation = method.getAnnotation(annotation);
             method.setAccessible(true);
             final Object object = method.invoke(null);
-            errors.addAll(inspectionMethod.apply(object, methodAnnotation, method.getName()));
+            errors.addAll(inspectionMethod.apply(object, method.getAnnotation(annotation), method.getName()));
         }
         return errors;
     }
 
     @SneakyThrows
     private static List<ValidationError> validateMinimalFilledTestObject(Object object, Annotation annotation, String methodName) {
-        List<ValidationError> errors = new ArrayList<>();
         final Class<?> testObjectClass = object.getClass();
-        final MinimalFilledTestObject minimalFilledTestObject = (MinimalFilledTestObject) annotation;
-
-        Predicate<Field> isNonNullField;
-        if (minimalFilledTestObject.nullMarkerHandling() == NullMarkerHandling.MARK_NON_NULLABLE_EXPLICITLY) {
-            isNonNullField = field -> Arrays.stream(field.getAnnotations())
-                    .map(Annotation::annotationType)
-                    .anyMatch(NON_NULL_ANNOTATIONS::contains);
-        } else {
-            isNonNullField = field -> Arrays.stream(field.getAnnotations())
-                    .map(Annotation::annotationType)
-                    .noneMatch(NULLABLE_ANNOTATIONS::contains);
-        }
+        MinimalFilledTestObject minimalFilledAnnotation = (MinimalFilledTestObject) annotation;
 
         // check fields
         final Field[] fields = testObjectClass.getDeclaredFields();
 
         final List<Field> nonNullFields = Arrays.stream(fields)
                 .filter(IS_NON_PRIMITIVE_FIELD)
-                .filter(isNonNullField) // minimal: so everything not marked as non-nullable must be null
+                .filter(isNonNullField(minimalFilledAnnotation.nullMarkerHandling()))
                 .toList();
 
-        for (Field field : nonNullFields) {
-//            System.out.println("field to be assumed to be non null: " + field.getName());
-
-            field.setAccessible(true);
-            final Object fieldValue = field.get(object);
-
-            if (isInvalidNull(field.getType(), fieldValue)) {
-                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
-                errors.add(validationError);
-                continue; // if invalid null, then no other things to check
-            }
-            if (isEmpty(field.getType(), fieldValue)) {
-                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.NULLABLE_FIELD_IS_FILLED, object, MinimalFilledTestObject.class);
-                errors.add(validationError);
-            }
-
-        }
+        List<ValidationError> errors = new ArrayList<>(validateNonNullFieldsNotEmpty(object, methodName, nonNullFields, testObjectClass));
 
         final List<Field> nullFields = Arrays.stream(fields)
                 .filter(IS_NON_PRIMITIVE_FIELD)
-                .filter(isNonNullField.negate()) // minimal: so everything not marked as non-nullable must be null
+                .filter(isNonNullField(minimalFilledAnnotation.nullMarkerHandling()).negate())
                 .toList();
 
-        for (Field field : nullFields) {
-//            System.out.println("field to be assumed to be null: " + field.getName());
+        errors.addAll(validateNullableFieldsEmpty(object, methodName, nullFields, testObjectClass));
+        return errors;
+    }
 
+    private static List<ValidationError> validateNullableFieldsEmpty(Object object, String methodName, List<Field> nullFields, Class<?> testObjectClass) throws IllegalAccessException {
+        List<ValidationError> validationErrors = new ArrayList<>();
+        for (Field field : nullFields) {
             field.setAccessible(true);
             final Object fieldValue = field.get(object);
 
-            if (isInvalidNull(field.getType(), fieldValue)) {
-                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
-                errors.add(validationError);
-                continue; // if invalid null, then no other things to check
-            }
-            if (!isEmpty(field.getType(), fieldValue)) {
-                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.NULLABLE_FIELD_IS_FILLED, object, MinimalFilledTestObject.class);
-                errors.add(validationError);
+            if (isNonNullableContainer(field.getType())) {
+                if (fieldValue == null) {
+                    ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
+                    validationErrors.add(validationError);
+                }
+                continue; // skip non-nullable containers for emptiness-checks
             }
 
+            if (!isEmpty(field.getType(), fieldValue)) {
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.NULLABLE_FIELD_IS_FILLED, object, MinimalFilledTestObject.class);
+                validationErrors.add(validationError);
+            }
         }
-        return errors;
+        return validationErrors;
+    }
+
+    private static List<ValidationError> validateNonNullFieldsNotEmpty(Object object, String methodName, List<Field> nonNullFields, Class<?> testObjectClass) throws IllegalAccessException {
+        List<ValidationError> validationErrors = new ArrayList<>();
+        for (Field field : nonNullFields) {
+            field.setAccessible(true);
+            final Object fieldValue = field.get(object);
+
+            if (isNonNullableContainer(field.getType())) {
+                if (fieldValue == null) {
+                    ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
+                    validationErrors.add(validationError);
+                }
+                continue; // skip non-nullable containers for emptiness-checks
+            }
+
+            if (isEmpty(field.getType(), fieldValue)) {
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_EMPTY, object, MinimalFilledTestObject.class);
+                validationErrors.add(validationError);
+            }
+        }
+        return validationErrors;
+    }
+
+    private static Predicate<Field> isNonNullField(NullMarkerHandling nullMarkerHandling) {
+        if (nullMarkerHandling == NullMarkerHandling.MARK_NON_NULLABLE_EXPLICITLY) {
+            return field -> Arrays.stream(field.getAnnotations())
+                    .map(Annotation::annotationType)
+                    .anyMatch(NON_NULL_ANNOTATIONS::contains);
+        } else {
+            return field -> Arrays.stream(field.getAnnotations())
+                    .map(Annotation::annotationType)
+                    .noneMatch(NULLABLE_ANNOTATIONS::contains);
+        }
     }
 
     @SneakyThrows
     private static List<ValidationError> validateCompletelyFilledTestObject(Object object, Annotation annotation, String methodName) {
         List<ValidationError> errors = new ArrayList<>();
         final Class<?> testObjectClass = object.getClass();
-//        final CompletelyFilledTestObject completelyFilledTestObject = (CompletelyFilledTestObject) annotation;
 
         // check fields
         final Field[] fields = testObjectClass.getDeclaredFields();
-
-
-        // TODO: unterscheiden zwischen explizit nullable und explizit nicht-nullable
 
         final List<Field> nonNullFields = Arrays.stream(fields)
                 // TODO: log warning if primitive fields are annotated as not-null or nullable
@@ -177,7 +191,11 @@ public class TestObjectScanner {
     }
 
     private static boolean isInvalidNull(Class<?> type, Object fieldValue) {
-        return Arrays.stream(NON_NULLABLE_CONTAINERS).filter(t -> t.isAssignableFrom(type)).findAny().map(it -> fieldValue == null).orElse(false);
+        return isNonNullableContainer(type) && fieldValue == null;
+    }
+
+    private static boolean isNonNullableContainer(Class<?> type) {
+        return Arrays.stream(NON_NULLABLE_CONTAINERS).anyMatch(t -> t.isAssignableFrom(type));
     }
 
     private static boolean isEmpty(Class<?> type, Object fieldValue) {

@@ -23,7 +23,6 @@ public class ImplicitPerson {
 
     private String firstName;
 
-    //    @Nullable
     @Builder.Default
     private Optional<String> middleName = Optional.empty();
 
@@ -33,9 +32,8 @@ public class ImplicitPerson {
     private Integer age;
 
     @Nullable
-    private Integer numberOfHeads;
+    private int numberOfHeads;
 
-    @Nullable
     @Builder.Default
     private List<String> hobbies = List.of();
 
@@ -43,7 +41,6 @@ public class ImplicitPerson {
     @Builder.Default
     private Set<String> favoriteMovies = Set.of();
 
-    @Nullable
     @Builder.Default
     private Map<Integer, String> achievementsByYear = Map.of();
 }

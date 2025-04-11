@@ -43,7 +43,7 @@ import java.util.function.Function;
  * @since 1.8
  */
 @FunctionalInterface
-public interface TriFunction<T, U, V, R> {
+interface TriFunction<T, U, V, R> {
 
     /**
      * Applies this function to the given arguments.

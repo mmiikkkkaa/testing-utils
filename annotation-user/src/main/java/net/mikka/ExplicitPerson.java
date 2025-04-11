@@ -32,7 +32,7 @@ public class ExplicitPerson {
 
     private Integer age;
 
-    private Integer numberOfHeads;
+    private int numberOfHeads;
 
     @Builder.Default
     private List<String> hobbies = List.of();
