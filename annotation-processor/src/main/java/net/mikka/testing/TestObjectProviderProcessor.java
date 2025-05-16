@@ -15,6 +15,7 @@ import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
 import java.util.Set;
 
+@SuppressWarnings("unused")
 @SupportedAnnotationTypes("net.mikka.testing.annotations.TestObjectProvider")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
@@ -25,6 +26,7 @@ public class TestObjectProviderProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotations) {
             final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             for (Element annotatedElement : annotatedElements) {
+                System.out.println("annotatedElement: " + annotatedElement);
                 generateTestClass(annotatedElement);
             }
         }
@@ -39,7 +41,7 @@ public class TestObjectProviderProcessor extends AbstractProcessor {
         final String testObjectProviderClassName = packageName + "." + element.getSimpleName();
 
 
-        JavaFileObject builderFile = processingEnv.getFiler().createSourceFile(className);
+        JavaFileObject builderFile = processingEnv.getFiler().createSourceFile(packageName + "." + className);
         try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
 
             out.println("package " + packageName + ";");
