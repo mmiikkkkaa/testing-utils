@@ -45,6 +45,7 @@ public class TestObjectScanner {
 
     @SneakyThrows
     public static List<ValidationError> validateTestObjects(Class<?> classToTest) {
+        System.out.println("Validating " + classToTest);
 
         List<ValidationError> errors = new ArrayList<>();
 
@@ -83,6 +84,8 @@ public class TestObjectScanner {
     @SneakyThrows
     private static List<ValidationError> validateMinimalFilledTestObject(Object object, Annotation annotation, String methodName) {
         final Class<?> testObjectClass = object.getClass();
+        System.out.println("validateMinimalFilledTestObject: " + testObjectClass.getSimpleName() + "::" + methodName);
+
         MinimalFilledTestObject minimalFilledAnnotation = (MinimalFilledTestObject) annotation;
 
         // check fields
@@ -110,12 +113,12 @@ public class TestObjectScanner {
             field.setAccessible(true);
             final Object fieldValue = field.get(object);
 
-            if (isNonNullableContainer(field.getType())) {
-                if (fieldValue == null) {
-                    ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
-                    validationErrors.add(validationError);
-                }
-                continue; // skip non-nullable containers for emptiness-checks
+            System.out.println("validating nullable field " + field.getName() + " is empty: " + fieldValue);
+
+            if (isInvalidNull(field.getType(), fieldValue)) {
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object, MinimalFilledTestObject.class);
+                validationErrors.add(validationError);
+                continue; // if invalidly null, then no other things to check
             }
 
             if (!isEmpty(field.getType(), fieldValue)) {
@@ -132,15 +135,23 @@ public class TestObjectScanner {
             field.setAccessible(true);
             final Object fieldValue = field.get(object);
 
-            if (isNonNullableContainer(field.getType())) {
-                if (fieldValue == null) {
-                    ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
-                    validationErrors.add(validationError);
-                }
+            System.out.println("validating non-null field " + field.getName() + " is not empty: " + fieldValue);
+
+            if (isInvalidNull(field.getType(), fieldValue)) {
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
+                validationErrors.add(validationError);
+                continue; // if invalidly null, then no other things to check
+            }
+
+            final boolean isEmpty = isEmpty(field.getType(), fieldValue);
+
+            if (isNonNullableContainer(field.getType()) && !isEmpty) {
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.NULLABLE_FIELD_IS_FILLED, object, MinimalFilledTestObject.class);
+                validationErrors.add(validationError);
                 continue; // skip non-nullable containers for emptiness-checks
             }
 
-            if (isEmpty(field.getType(), fieldValue)) {
+            if (isEmpty) {
                 ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_EMPTY, object, MinimalFilledTestObject.class);
                 validationErrors.add(validationError);
             }
@@ -162,8 +173,9 @@ public class TestObjectScanner {
 
     @SneakyThrows
     private static List<ValidationError> validateCompletelyFilledTestObject(Object object, Annotation annotation, String methodName) {
-        List<ValidationError> errors = new ArrayList<>();
         final Class<?> testObjectClass = object.getClass();
+
+        System.out.println("validateCompletelyFilledTestObject: " + testObjectClass.getSimpleName() + "::" + methodName);
 
         // check fields
         final Field[] fields = testObjectClass.getDeclaredFields();
@@ -172,12 +184,13 @@ public class TestObjectScanner {
                 // TODO: log warning if primitive fields are annotated as not-null or nullable
                 .filter(IS_NON_PRIMITIVE_FIELD).toList();
 
+        List<ValidationError> errors = new ArrayList<>();
         for (Field field : nonNullFields) {
             field.setAccessible(true);
             final Object fieldValue = field.get(object);
 
             if (isInvalidNull(field.getType(), fieldValue)) {
-                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object);
+                ValidationError validationError = ValidationError.of(methodName, testObjectClass, field, ValidationErrorType.FIELD_IS_ILLEGALLY_NULL, object, CompletelyFilledTestObject.class);
                 errors.add(validationError);
                 continue; // if invalidly null, then no other things to check
             }
