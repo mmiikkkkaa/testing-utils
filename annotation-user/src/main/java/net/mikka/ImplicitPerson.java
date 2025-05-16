@@ -31,13 +31,12 @@ public class ImplicitPerson {
     @Nullable
     private Integer age;
 
-    @Nullable
+    @Nullable // TODO: should give a warning, since int cannot be null
     private int numberOfHeads;
 
     @Builder.Default
     private List<String> hobbies = List.of();
 
-    @Nullable
     @Builder.Default
     private Set<String> favoriteMovies = Set.of();
 

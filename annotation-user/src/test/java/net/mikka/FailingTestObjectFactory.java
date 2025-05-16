@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@SuppressWarnings("unused")
 @UtilityClass
 //@TestObjectProvider
 public class FailingTestObjectFactory {

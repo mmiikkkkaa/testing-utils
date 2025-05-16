@@ -13,6 +13,7 @@ import java.util.Set;
 
 @UtilityClass
 @TestObjectProvider
+@SuppressWarnings("unused")
 public class SuccessTestObjectFactory {
 
     public static ExplicitPerson nonAnnotatedPerson() {
