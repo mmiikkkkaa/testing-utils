@@ -13,21 +13,27 @@ import java.util.Set;
 
 @UtilityClass
 @TestObjectProvider
-public class TestObjectFactory {
+public class SuccessTestObjectFactory {
 
-    @MinimalFilledTestObject(nullMarkerHandling = NullMarkerHandling.MARK_NON_NULLABLE_EXPLICITLY)
-    public static ExplicitPerson explicitPersonMin() {
+    public static ExplicitPerson nonAnnotatedPerson() {
         return ExplicitPerson.builder()
                 .firstName("John")
-//                .middleName(Optional.of("Wrong")) // explicit empty is fine
-//                .middleName(null) // optionals should never be null
+                .middleName(Optional.of("Wayne"))
                 .lastName("Doe")
-//                .hobbies(List.of("software testing")) // hobbies are not required
+                .hobbies(List.of("software testing"))
+                .build();
+    }
+
+    @MinimalFilledTestObject(nullMarkerHandling = NullMarkerHandling.MARK_NON_NULLABLE_EXPLICITLY)
+    public static ExplicitPerson explicitPersonMinSuccess() {
+        return ExplicitPerson.builder()
+                .firstName("John")
+                .lastName("Doe")
                 .build();
     }
 
     @CompletelyFilledTestObject
-    public static ExplicitPerson explicitPersonMax() {
+    public static ExplicitPerson explicitPersonMaxSuccess() {
         return ExplicitPerson.builder()
                 .firstName("John")
                 .middleName(Optional.of("Wayne"))
@@ -40,20 +46,16 @@ public class TestObjectFactory {
                 .build();
     }
 
-
     @MinimalFilledTestObject(nullMarkerHandling = NullMarkerHandling.MARK_NULLABLE_EXPLICITLY)
-    public static ImplicitPerson implicitPersonMin() {
+    public static ImplicitPerson implicitPersonMinSuccess() {
         return ImplicitPerson.builder()
                 .firstName("John")
-//                .middleName(Optional.empty()) // explicit empty is fine
-//                .middleName(null) // optionals should never be null
                 .lastName("Doe")
-//                .hobbies(List.of("software testing")) // hobbies are not required
                 .build();
     }
 
     @CompletelyFilledTestObject
-    public static ImplicitPerson implicitPersonMax() {
+    public static ImplicitPerson implicitPersonMaxSuccess() {
         return ImplicitPerson.builder()
                 .firstName("John")
                 .middleName(Optional.of("Wayne"))
