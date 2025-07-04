@@ -18,10 +18,30 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
         <junit.version>5.11.4</junit.version>
+        <lombok.version>1.18.36</lombok.version>
+        <spring.version>6.1.14</spring.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+
+        <!-- test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -32,6 +52,7 @@
             <groupId>net.mikka.testing</groupId>
             <artifactId>testing-utils</artifactId>
             <version>0.1.0-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
