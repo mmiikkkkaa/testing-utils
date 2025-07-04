@@ -63,14 +63,14 @@ public class TestObjectScanner {
     @SneakyThrows
     private static List<ValidationError> validateMinimalFilledTestObject(Object testObject, Annotation testObjectMethodAnnotation, String testObjectCreatingMethodName) {
         return ValidationStrategyFactory
-                .getMinimalllyFilledValidationStrategy((MinimalFilledTestObject) testObjectMethodAnnotation, testObject)
+                .getMinimallyFilledValidationStrategy((MinimalFilledTestObject) testObjectMethodAnnotation, testObject)
                 .validateTestObjectCreatedByMethod(testObjectCreatingMethodName);
     }
 
     @SneakyThrows
     private static List<ValidationError> validateCompletelyFilledTestObject(Object testObject, Annotation testObjectMethodAnnotation, String testObjectCreatingMethodName) {
         return ValidationStrategyFactory
-                .getCompletyFilledValidationStrategy((CompletelyFilledTestObject) testObjectMethodAnnotation, testObject)
+                .getCompletelyFilledValidationStrategy((CompletelyFilledTestObject) testObjectMethodAnnotation, testObject)
                 .validateTestObjectCreatedByMethod(testObjectCreatingMethodName);
     }
 
